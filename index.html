@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 51;
+const VERSION = 52;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -5636,14 +5636,7 @@ function renderTitle() {
     const sz = Math.round(clamp(VH * 0.026, 15, 21)), ty = by + bh + sz * 2;
     const w1 = textLink(lx + 8, ty, 'Nap Sack', sz, () => { S = 'album'; mapFromAlbum = false; albumCity = 0; });
     textLink(lx + 8 + w1 + 30 * U, ty, 'Settings', sz, () => { S = 'settings'; });
-    // player chip
-    const name = pr.name, cs = Math.round(16 * U); ctx.font = '700 ' + cs + 'px ' + FB;
-    const cw = ctx.measureText(name).width + 62 * U, ch = 44 * U, cx = VW - SAFE.r - 24 - cw, cy = SAFE.t + 20;
-    rr(cx, cy, cw, ch, ch / 2); ctx.fillStyle = 'rgba(255,248,232,.75)'; ctx.fill();
-    ci(cx + ch / 2, cy + ch / 2, ch * 0.36); ctx.fillStyle = '#E9954A'; ctx.fill();
-    txt(name.charAt(0).toUpperCase(), cx + ch / 2, cy + ch / 2 + 1, Math.round(cs * 0.95), '#2E2140', 'center', FB, 0);
-    txt(name, cx + ch, cy + ch / 2 + 1, cs, '#2E2140', 'left', FB, 0);
-    BTN.push({ x: cx, y: cy, w: cw, h: ch, fn: () => { S = 'profiles'; profConfirm = -1; } });
+    titleStandings();
   }
   soundButtons(VW - SAFE.r - 24, VH - SAFE.b - 48, 18 * U);
   txt('v' + VERSION, VW - SAFE.r - 14, VH - SAFE.b - 14, 13, '#F6DCCB', 'right', FB, 0);
@@ -5657,6 +5650,37 @@ function renderTitle() {
     rr(VW / 2 - tw / 2, VH - SAFE.b - 40 * U, tw, 28 * U, 14 * U); ctx.fillStyle = 'rgba(46,33,64,.72)'; ctx.fill();
     flatText(tip, VW / 2, VH - SAFE.b - 26 * U, Math.round(12 * U), '#FFF3E0', 'center', '700 ' + FB);
   }
+}
+// the little standings card on the Home screen: everyone on this device, leader on top with a crown
+function titleStandings() {
+  const list = SAVE.profiles.map((p, i) => ({ p, i, st: playerStats(p) })).sort((a, b) => b.st.stars - a.st.stars || b.st.finds - a.st.finds || a.i - b.i);
+  if (!list.length) return;
+  const show = list.slice(0, 4), rh = Math.round(40 * U), hh = Math.round(30 * U), cw = Math.round(250 * U);
+  const cx = VW - SAFE.r - 24 - cw, cy = SAFE.t + 18, ch = hh + show.length * rh + 10 * U + (list.length > 4 ? 18 * U : 0);
+  rr(cx, cy, cw, ch, 20 * U); ctx.fillStyle = 'rgba(255,248,232,.82)'; ctx.fill();
+  flatText('STANDINGS', cx + 18 * U, cy + hh / 2 + 4 * U, Math.round(11.5 * U), '#6B4560', 'left', '800 ' + FB);
+  flatText('Players ›', cx + cw - 16 * U, cy + hh / 2 + 4 * U, Math.round(11.5 * U), '#B4602E', 'right', '800 ' + FB);
+  BTN.push({ x: cx + cw - 90 * U, y: cy, w: 90 * U, h: hh, fn: () => { S = 'profiles'; profConfirm = -1; } });
+  const lead = list[0].st.stars, tied = list.length > 1 && list[1].st.stars === lead && list[1].st.finds === list[0].st.finds;
+  show.forEach((e, r) => {
+    const y = cy + hh + r * rh + 4 * U, my = y + rh / 2, cur = e.i === SAVE.cur;
+    if (cur) { rr(cx + 8 * U, y + 2, cw - 16 * U, rh - 4, (rh - 4) / 2); ctx.fillStyle = 'rgba(233,149,74,.28)'; ctx.fill(); }
+    const ax = cx + 30 * U; ci(ax, my, 14 * U); ctx.fillStyle = '#E9954A'; ctx.fill();
+    flatText(e.p.name.charAt(0).toUpperCase(), ax, my + 1, Math.round(14 * U), '#2E2140', 'center', '800 ' + FB);
+    if (r === 0 && lead > 0 && !tied) drawCrown(ax, my - 17 * U, 9 * U);
+    let nm = e.p.name; const nsz = Math.round(16 * U); ctx.font = '800 ' + nsz + 'px ' + FB;
+    while (nm.length > 2 && ctx.measureText(nm).width > cw - 150 * U) nm = nm.slice(0, -1);
+    if (nm !== e.p.name) nm += '…';
+    flatText(nm, cx + 52 * U, my + 1, nsz, '#2E2140', 'left', '800 ' + FB);
+    flatText('★ ' + e.st.stars, cx + cw - 18 * U, my + 1, Math.round(16 * U), r === 0 && lead > 0 ? '#C98A10' : '#2E2140', 'right', '800 ' + FB);
+    BTN.push({ x: cx + 8 * U, y, w: cw - 16 * U, h: rh, fn: () => { SAVE.cur = e.i; persist(); } });   // tap a name to play as them
+  });
+  if (list.length > 4) flatText('+' + (list.length - 4) + ' more', cx + cw / 2, cy + ch - 14 * U, Math.round(11.5 * U), '#6B4560', 'center', '700 ' + FB);
+}
+function drawCrown(x, y, s2) {
+  ctx.save(); ctx.translate(x, y); ctx.fillStyle = '#F2B530'; ctx.strokeStyle = '#2E2140'; ctx.lineWidth = Math.max(1.5, s2 * 0.18); ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-s2, s2 * 0.6); ctx.lineTo(-s2, -s2 * 0.5); ctx.lineTo(-s2 * 0.45, 0); ctx.lineTo(0, -s2 * 0.8); ctx.lineTo(s2 * 0.45, 0); ctx.lineTo(s2, -s2 * 0.5); ctx.lineTo(s2, s2 * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 function renderSettings() {
   goldenBg(T0);
