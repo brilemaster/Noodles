@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 50;
+const VERSION = 51;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -758,7 +758,8 @@ function b21() {
   plat(L, 78, 80, 9); gold(L, 78, 10);
   warp(L, 80, 10, 1, 2, 157, 3, 'window');
   lizard(L, 89, 3);
-  tile(L, 93, 4, 'T'); plat(L, 91, 95, 11); token(L, 94, 12, 1); coins(L, 91, 92, 12); trail(L, [[93, 6], [93, 7], [93, 8], [93, 9]]);
+  balloon(L, 69, 5, 0); balloon(L, 73, 7, 2); coins(L, 72, 72, 11); coins(L, 74, 74, 11); heartItem(L, 73, 12);
+  tile(L, 88, 4, 'T'); plat(L, 85, 89, 11); token(L, 88, 12, 1); coins(L, 85, 86, 12); trail(L, [[88, 6], [88, 7], [88, 8], [88, 9]]);   // ledge sits back from the pit so you land on the floor
   trail(L, [[96, 6], [97, 7], [98, 7], [99, 7], [100, 6]]);
   ground(L, 100, 151, 3);
   tile(L, 104, 7, '?'); tile(L, 105, 7, 'M'); tile(L, 106, 7, '?');
@@ -1112,7 +1113,8 @@ function b43() {
   plat(L, 78, 80, 9); gold(L, 78, 10);
   warp(L, 80, 10, 1, 2, 157, 3, 'window');
   monkey(L, 89, 3);
-  tile(L, 93, 4, 'T'); plat(L, 91, 95, 11); token(L, 94, 12, 1); coins(L, 91, 92, 12); trail(L, [[93, 6], [93, 7], [93, 8], [93, 9]]);
+  balloon(L, 69, 5, 0); balloon(L, 73, 7, 2); coins(L, 72, 72, 11); coins(L, 74, 74, 11); heartItem(L, 73, 12);
+  tile(L, 88, 4, 'T'); plat(L, 85, 89, 11); token(L, 88, 12, 1); coins(L, 85, 86, 12); trail(L, [[88, 6], [88, 7], [88, 8], [88, 9]]);   // ledge sits back from the pit so you land on the floor
   trail(L, [[96, 6], [97, 7], [98, 7], [99, 7], [100, 6]]);
   ground(L, 100, 151, 3);
   tile(L, 104, 7, '?'); tile(L, 105, 7, 'M'); tile(L, 106, 7, '?');
@@ -1217,7 +1219,8 @@ function b53() {
   coins(L, 30, 34, 4);
   plat(L, 36, 39, 6); token(L, 38, 7, 0); coin(L, 36, 7); coin(L, 37, 7); coin(L, 39, 7);
   tile(L, 44, 4, '^'); trail(L, [[44, 7], [44, 9], [44, 11]]); buggy(L, 50, 3, 6);
-  balloon(L, 54, 6, 1); balloon(L, 20, 8, 0); balloon(L, 70, 9, 2); balloon(L, 110, 9, 1);
+  // garden lanterns are bounce pads: each little chain leads up to a reward
+  balloon(L, 54, 5, 1); balloon(L, 58, 7, 2); trail(L, [[57, 10], [58, 11], [59, 11], [60, 10], [62, 8]]);
   trail(L, [[58, 6], [59, 7], [60, 7], [61, 7], [62, 6]]);
   ground(L, 62, 96, 3);
   flag(L, 66, 3);
@@ -1226,11 +1229,13 @@ function b53() {
   plat(L, 78, 80, 9); gold(L, 78, 10);
   warp(L, 80, 10, 1, 2, 157, 3, 'window');
   crowd(L, [88], 3);
-  tile(L, 93, 4, 'T'); plat(L, 91, 95, 11); token(L, 94, 12, 1); coins(L, 91, 92, 12); trail(L, [[93, 6], [93, 7], [93, 8], [93, 9]]);
+  balloon(L, 69, 5, 0); balloon(L, 73, 7, 2); coins(L, 72, 72, 11); coins(L, 74, 74, 11); heartItem(L, 73, 12);
+  tile(L, 88, 4, 'T'); plat(L, 85, 89, 11); token(L, 88, 12, 1); coins(L, 85, 86, 12); trail(L, [[88, 6], [88, 7], [88, 8], [88, 9]]);   // ledge sits back from the pit so you land on the floor
   trail(L, [[96, 6], [97, 7], [98, 7], [99, 7], [100, 6]]);
   ground(L, 100, 151, 3);
   tile(L, 104, 7, '?'); tile(L, 105, 7, 'M'); tile(L, 106, 7, '?');
   crowd(L, [112, 126], 3); pigeon(L, 118, 3); flyer(L, 122, 8);
+  balloon(L, 109, 5, 1); balloon(L, 113, 7, 0); coins(L, 111, 115, 11); gold(L, 113, 12);
   for (let i = 0; i < 4; i++) { fill(L, 128 + i, 128 + i, 4, 4 + i); coin(L, 128 + i, 5 + i); }
   fill(L, 132, 133, 4, 7);
   goal(L, 140, 3);
@@ -1333,7 +1338,8 @@ function b62() {
   plat(L, 78, 80, 9); gold(L, 78, 10);
   warp(L, 80, 10, 1, 2, 157, 3, 'window');
   crowd(L, [88], 3);
-  tile(L, 93, 4, 'T'); plat(L, 91, 95, 11); token(L, 94, 12, 1); coins(L, 91, 92, 12); trail(L, [[93, 6], [93, 7], [93, 8], [93, 9]]);
+  balloon(L, 69, 5, 0); balloon(L, 73, 7, 2); coins(L, 72, 72, 11); coins(L, 74, 74, 11); heartItem(L, 73, 12);
+  tile(L, 88, 4, 'T'); plat(L, 85, 89, 11); token(L, 88, 12, 1); coins(L, 85, 86, 12); trail(L, [[88, 6], [88, 7], [88, 8], [88, 9]]);   // ledge sits back from the pit so you land on the floor
   trail(L, [[96, 6], [97, 7], [98, 7], [99, 7], [100, 6]]);
   ground(L, 100, 151, 3);
   tile(L, 104, 7, '?'); tile(L, 105, 7, 'M'); tile(L, 106, 7, '?');
@@ -4671,7 +4677,7 @@ function updatePlay() {
     const b = g.bubble; b.t += 1 / 55;
     const k = Math.min(1, b.t), e = k * k * (3 - 2 * k);
     p.x = lerp(b.x0, b.x1, e); p.y = lerp(b.y0, b.y1, e) - Math.sin(k * Math.PI) * 60;
-    if (k >= 1) { g.bubble = null; p.vy = 0; p.vx = 0; g.inv = 70; SFX.pouch(); }
+    if (k >= 1) { g.bubble = null; p.vy = 0; p.vx = 0; g.inv = 70; SFX.pouch(); clearInputs(); }
   } else {
     const ev = [];
     updateVines(L, g.t, p);
@@ -4707,7 +4713,7 @@ function updatePlay() {
     g.tail = lerp(g.tail, -Math.abs(p.vx) * 1.6, 0.15); g.tailY = lerp(g.tailY, clamp(-p.vy * 1.2, -10, 10), 0.2);
     if (p.onGround && !p.riding && p.vine < 0) {
       const ty = Math.floor((p.y + p.h + 1) / T);
-      if (isFirm(Math.floor((p.x + 1) / T), ty) && isFirm(Math.floor((p.x + p.w - 1) / T), ty)) g.safe = { x: p.x, y: p.y };
+      if (isFirm(Math.floor((p.x + 1) / T), ty) && isFirm(Math.floor((p.x + p.w - 1) / T), ty) && isFirm(Math.floor((p.x + 1) / T) - 1, ty) && isFirm(Math.floor((p.x + p.w - 1) / T) + 1, ty)) g.safe = { x: p.x, y: p.y };   // a step back from any edge, so a rescue never drops you right back in
     }
     if (inp.actionPressed) throwYarn();
     if (p.gliding && g.t % 6 === 0) g.parts.push({ x: p.x + p.w / 2 + rnd(-10, 10), y: p.y - 10, vx: 0, vy: -0.5, life: 14, t: 0, c: 'rgba(255,255,255,.8)', s: 2, g: 0, kind: 'dot', r: 0 });
