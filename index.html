@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 49;
+const VERSION = 50;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -1168,37 +1168,11 @@ function b45() {
 }
 // ---------------- City 5: Seoul (Incheon) Airport ----------------
 function crowd(L, xs, s) { xs.forEach((x, i) => traveler(L, x, s, 3 + (i % 3))); }
-function b51() {
-  const L = mk(178, 'Arrivals Hall', 20, 75); L.start = { tx: 2, s: 3 };
-  room(L, 0, 153);
-  ground(L, 0, 40, 3); sunspot(L, 3, 3, 3);
-  greet(L, 10, 'Annyeonghaseyo, Noodles!'); greet(L, 104, 'Welcome to Seoul!');
-  coins(L, 4, 8, 4);
-  tile(L, 9, 7, '?'); tile(L, 10, 7, 'U'); tile(L, 11, 7, '?');
-  crowd(L, [16, 26, 34], 3); buggy(L, 22, 3, 8);
-  fill(L, 24, 27, 4, 5); coins(L, 24, 27, 6);
-  trail(L, [[40, 6], [41, 7], [42, 7], [43, 7], [44, 6]]);
-  ground(L, 44, 70, 3);
-  plat(L, 48, 51, 6); token(L, 50, 7, 0); coin(L, 48, 7); coin(L, 49, 7); coin(L, 51, 7);
-  belt(L, 54, 64, 3, 1.6); coins(L, 55, 63, 4); crowd(L, [57], 3);
-  flag(L, 66, 3);
-  trail(L, [[70, 6], [71, 7], [72, 7], [73, 7], [74, 6]]);
-  ground(L, 74, 110, 3);
-  tile(L, 80, 4, 'T'); plat(L, 78, 82, 11); token(L, 81, 12, 1); coins(L, 78, 79, 12); trail(L, [[80, 6], [80, 7], [80, 8], [80, 9]]);
-  plat(L, 90, 92, 6); plat(L, 93, 95, 9); gold(L, 93, 10);
-  warp(L, 95, 10, 1, 2, 157, 3, 'window');
-  crowd(L, [86, 100], 3); buggy(L, 104, 3, 5); pigeon(L, 106, 3);
-  trail(L, [[110, 6], [111, 7], [112, 7], [113, 7], [114, 6]]);
-  ground(L, 114, 151, 3);
-  tile(L, 118, 7, '?'); tile(L, 119, 7, 'M'); tile(L, 120, 7, '?');
-  crowd(L, [124, 136], 3);
-  for (let i = 0; i < 4; i++) { fill(L, 128 + i, 128 + i, 4, 4 + i); coin(L, 128 + i, 5 + i); }
-  fill(L, 132, 133, 4, 7);
-  goal(L, 142, 3);
-  secretRoom(L, 152, 177, 3, 12);
-  stars(L, 158, 168, 4); plat(L, 160, 166, 6); stars(L, 160, 166, 7);
-  token(L, 163, 9, 2); chest(L, 155, 4); tile(L, 158, 7, 'M');
-  warp(L, 176, 4, 1, 2, 98, 3, 'exit');
+function b51() {   // Check-in & Security: bright morning hall, walkways, bag belts
+  const L = b52(); L.name = 'Check-in & Security'; L.theme = 35;
+  L.deco = L.deco.filter(d => d.k !== 'greet');
+  greet(L, 8, 'Annyeonghaseyo! Bags on the belt, cats through the arch!'); greet(L, 104, 'Your gate is that way. Probably.');
+  cart(L, 112, 3);
   return L;
 }
 function b52() {
@@ -1231,10 +1205,10 @@ function b52() {
   return L;
 }
 function b53() {
-  const L = mk(178, 'Duty Free', 22, 85); L.start = { tx: 2, s: 3 };
+  const L = mk(178, 'Sky Garden', 36, 85); L.start = { tx: 2, s: 3 };
   room(L, 0, 153);
   ground(L, 0, 24, 3); sunspot(L, 3, 3, 3);
-  greet(L, 10, 'Free samples at duty free!'); greet(L, 100, 'Would you like a sheet mask?');
+  greet(L, 10, 'The indoor garden is lovely at night!'); greet(L, 100, 'Free sheet mask with your tea?');
   coins(L, 4, 8, 4);
   tile(L, 9, 7, '?'); tile(L, 10, 7, 'Z'); tile(L, 11, 7, '?');
   crowd(L, [16, 21], 3);
@@ -1243,7 +1217,7 @@ function b53() {
   coins(L, 30, 34, 4);
   plat(L, 36, 39, 6); token(L, 38, 7, 0); coin(L, 36, 7); coin(L, 37, 7); coin(L, 39, 7);
   tile(L, 44, 4, '^'); trail(L, [[44, 7], [44, 9], [44, 11]]); buggy(L, 50, 3, 6);
-  balloon(L, 54, 6, 1);
+  balloon(L, 54, 6, 1); balloon(L, 20, 8, 0); balloon(L, 70, 9, 2); balloon(L, 110, 9, 1);
   trail(L, [[58, 6], [59, 7], [60, 7], [61, 7], [62, 6]]);
   ground(L, 62, 96, 3);
   flag(L, 66, 3);
@@ -1296,7 +1270,7 @@ function b54() {
   return L;
 }
 function b55() {
-  const L = b15(); L.name = 'Departure Gate'; L.theme = 24;
+  const L = b15(); L.name = 'Gate 1040'; L.theme = 37;
   L.deco = L.deco.filter(d => d.k !== 'greet');
   greet(L, 12, 'Now boarding… someone in a tiny suit?');
   L.enemies = L.enemies.filter(e => e.k !== 'pigeon'); crowd(L, [10, 20], 3);
@@ -1506,11 +1480,10 @@ const WORLDS = [
     { id: '4-4', name: 'Promthep Sunset', build: () => addJars(lowerBoxes(b44())) },
     { id: '4-5', name: 'Monkey Hill', build: () => addJars(lowerBoxes(b45())), boss: true } ] },
   { n: 5, name: 'Seoul Airport', theme: 23, ready: true, levels: [
-    { id: '5-1', name: 'Arrivals Hall', build: () => addJars(lowerBoxes(b51())) },
-    { id: '5-2', name: 'Moving Walkways', build: () => addJars(lowerBoxes(b52())) },
-    { id: '5-3', name: 'Duty Free', build: () => addJars(lowerBoxes(b53())) },
-    { id: '5-4', name: 'Gate 1004', build: () => addJars(lowerBoxes(b54())) },
-    { id: '5-5', name: 'Departure Gate', build: () => addJars(lowerBoxes(b55())), boss: true } ] },
+    // three zones (v50). ids kept from the old five-level airport so saves still line up
+    { id: '5-1', name: 'Check-in & Security', build: () => addJars(lowerBoxes(b51())) },
+    { id: '5-3', name: 'Sky Garden', build: () => addJars(lowerBoxes(b53())) },
+    { id: '5-5', name: 'Gate 1040', build: () => addJars(lowerBoxes(b55())), boss: true } ] },
   { n: 6, name: 'Ireland', theme: 25, country: true, ready: true, levels: [
     { id: '6-1', name: 'Dublin', build: () => addJars(lowerBoxes(b61())) },
     { id: '6-2', name: 'Galway', build: () => addJars(lowerBoxes(b62())) },
@@ -2038,6 +2011,10 @@ const THEMES = [
   { name: 'fr-provence', fr: 'provence', sky: ['#FFB868', '#FFD48A', '#E6C2E2', '#B79AD6'], far: '#9C86C0', haze: '#E8D6EA', mid: '#5A4A6E', win: '#FFE3A0', sun: '#FFF4D6', brick: '#D98A5A', brickD: '#A9603E', cap: '#5A3A30', capL: '#8A5A44', chim: '#C9784E' },
   { name: 'fr-marseille', fr: 'marseille', port: true, sky: ['#2FA8EE', '#6CCAF4', '#B8E6F4', '#FFF0D8'], far: '#8CB0CC', sea: '#2F9ECC', haze: '#E2F2F6', mid: '#3A5A7A', win: '#FFE3A0', sun: '#FFF8E4', brick: '#E0965E', brickD: '#B06A40', cap: '#5A3A30', capL: '#8A5A44', chim: '#C9784E' },
   { name: 'fr-nice', fr: 'nice', port: true, sky: ['#FF8E4A', '#FFB65C', '#FF7E86', '#C2479A'], far: '#B65C88', sea: '#E2708A', haze: '#FFB27A', mid: '#45296A', win: '#FFC86B', sun: '#FFF0C4', brick: '#E0965E', brickD: '#A9603E', cap: '#3A2350', capL: '#5A3A78', chim: '#D27C64' },
+  // 35-37: Seoul airport, three zones that each look different (v50)
+  { name: 'air-checkin', air: true, zone: 'checkin', sky: ['#6FB8E2', '#9CD0EC', '#C8E4F0', '#E4F0F4'], far: '#AFC6D8', haze: '#EEF5F9', mid: '#5E7C9A', win: '#FFFFFF', sun: '#FFFDF2', brick: '#D3DCE6', brickD: '#A0ACBC', cap: '#3A4A5E', capL: '#5A6E86', chim: '#B0BCCB' },
+  { name: 'air-garden', air: true, zone: 'garden', night: true, sky: ['#0B1430', '#17244E', '#2A2F66', '#4A3A78'], far: '#1C2650', haze: '#3A3270', mid: '#0F1730', win: '#FFD98A', sun: '#F3F0FF', brick: '#7C849C', brickD: '#545C74', cap: '#1C2440', capL: '#34405E', chim: '#7A8298' },
+  { name: 'air-gate', air: true, zone: 'gate', sky: ['#5E6A88', '#8E96AE', '#CDB0B6', '#F0C2A4'], far: '#4E5A74', haze: '#C4BAC4', mid: '#36425A', win: '#FFE6B8', sun: '#FFE8D0', brick: '#B4BAC8', brickD: '#848B9E', cap: '#2E3850', capL: '#4A5670', chim: '#A0A8B8' },
 ];
 // bright secret-room schemes; each room gets one (see secretTheme)
 const SECRET_VARIANTS = [
@@ -3515,6 +3492,7 @@ function makeAirLayer(th, far, h) {
   const w = 1100; const c = document.createElement('canvas'); c.width = Math.ceil(w * DPR); c.height = Math.ceil(h * DPR);
   const g = c.getContext('2d'); g.scale(DPR, DPR); c.wins = []; c.lines = [];
   const R = seeded(far ? 500 : 501);
+  if (th.zone) { airZoneLayer(g, th, far, w, h, R, c); return c; }
   if (far) {
     g.fillStyle = th.far; g.globalAlpha = 0.6; g.beginPath(); g.moveTo(0, h * 0.62);
     for (let x = 0; x <= w; x += 10) g.lineTo(x, h * 0.62 - Math.abs(Math.sin(x / w * Math.PI * 3)) * h * 0.08); g.lineTo(w, h); g.lineTo(0, h); g.fill(); g.globalAlpha = 1;
@@ -3552,6 +3530,123 @@ function makeAirLayer(th, far, h) {
   g.fillStyle = '#FFD84A'; g.font = '700 9px ' + FB; g.textAlign = 'left'; g.textBaseline = 'top';
   ['NASHVILLE  1004  BOARDING', 'BANGKOK    0712  ON TIME', 'PHUKET     0306  ON TIME', 'CHIANG MAI 2015  DELAYED'].forEach((r, i) => g.fillText(r, bx + 10, h * 0.3 + 6 + i * 13));
   return c;
+}
+// ---- Seoul airport zones (v50): check-in morning, sky garden at night, gate 1040 in rainy dawn ----
+function airZoneLayer(g, th, far, w, h, R, c) {
+  const Z = th.zone;
+  const roof = (col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); g.moveTo(0, h * 0.1); g.quadraticCurveTo(w / 2, h * 0.0, w, h * 0.1); g.stroke(); };
+  if (far) {
+    if (Z === 'checkin') {   // soft mountains, the control tower and a plane taking off
+      g.fillStyle = th.far; g.globalAlpha = 0.45; g.beginPath(); g.moveTo(0, h * 0.66);
+      for (let x = 0; x <= w; x += 10) g.lineTo(x, h * 0.66 - Math.abs(Math.sin(x / w * Math.PI * 2.4 + 1)) * h * 0.12); g.lineTo(w, h); g.lineTo(0, h); g.fill(); g.globalAlpha = 1;
+      g.fillStyle = th.far; g.fillRect(0, h * 0.72, w, h * 0.28);
+      const tx = w * 0.2; g.fillRect(tx, h * 0.36, 18, h * 0.36); g.beginPath(); g.moveTo(tx - 20, h * 0.36); g.lineTo(tx + 38, h * 0.36); g.lineTo(tx + 30, h * 0.29); g.lineTo(tx - 12, h * 0.29); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(tx - 10, h * 0.305, 38, 5);
+      g.save(); g.translate(w * 0.7, h * 0.3); g.rotate(-0.18); g.fillStyle = '#F4F8FC'; g.beginPath(); g.ellipse(0, 0, 46, 7, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(-6, 0); g.lineTo(-22, 22); g.lineTo(-10, 22); g.lineTo(10, 0); g.fill(); g.beginPath(); g.moveTo(-38, -2); g.lineTo(-48, -18); g.lineTo(-40, -18); g.lineTo(-28, -2); g.fill();
+      g.fillStyle = '#3FA8E0'; g.fillRect(-30, -1, 60, 2); g.restore();
+      return;
+    }
+    if (Z === 'garden') {   // night runway: blue edge lights, a lit tower, a plane's blinking lights
+      g.fillStyle = th.far; g.fillRect(0, h * 0.7, w, h * 0.3);
+      for (let x = 0; x < w; x += 22) { g.fillStyle = '#5FA8FF'; g.fillRect(x, h * 0.74, 4, 3); g.fillStyle = '#FFD86A'; g.fillRect(x + 11, h * 0.82, 4, 3); }
+      g.fillStyle = 'rgba(255,255,255,.25)'; for (let x = 0; x < w; x += 70) g.fillRect(x, h * 0.785, 34, 2);
+      const tx = w * 0.72; g.fillStyle = th.far; g.fillRect(tx, h * 0.4, 16, h * 0.3); g.beginPath(); g.moveTo(tx - 18, h * 0.4); g.lineTo(tx + 34, h * 0.4); g.lineTo(tx + 26, h * 0.33); g.lineTo(tx - 10, h * 0.33); g.fill();
+      g.fillStyle = '#9FE0FF'; g.fillRect(tx - 8, h * 0.345, 32, 5); g.fillStyle = '#FF5A6A'; g.fillRect(tx + 6, h * 0.31, 4, 4);
+      g.fillStyle = th.far; g.beginPath(); g.ellipse(w * 0.3, h * 0.68, 60, 9, 0, 0, Math.PI * 2); g.fill(); g.fillRect(w * 0.3 - 56, h * 0.6, 10, 16);
+      g.fillStyle = '#FF5A6A'; g.fillRect(w * 0.3 - 54, h * 0.6, 4, 4); g.fillStyle = '#7CFF8A'; g.fillRect(w * 0.3 + 50, h * 0.67, 4, 4);
+      for (let i = 0; i < 9; i++) { g.fillStyle = 'rgba(255,230,160,.6)'; g.fillRect(w * 0.3 - 40 + i * 9, h * 0.665, 3, 3); }
+      return;
+    }
+    // gate: wet tarmac at dawn, a big plane parked at the jet bridge
+    g.fillStyle = th.far; g.fillRect(0, h * 0.7, w, h * 0.3);
+    g.fillStyle = 'rgba(255,220,200,.18)'; for (let x = 0; x < w; x += 46) g.fillRect(x + (x % 3) * 5, h * 0.76 + (x % 5) * 4, 26, 2);
+    const px = w * 0.55, py = h * 0.6;
+    g.fillStyle = '#E6E8F0'; g.beginPath(); g.ellipse(px, py, 150, 20, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(px - 120, py - 6); g.lineTo(px - 150, py - 62); g.lineTo(px - 126, py - 62); g.lineTo(px - 96, py - 8); g.fill();
+    g.fillStyle = '#CCD0DC'; g.beginPath(); g.moveTo(px - 20, py + 6); g.lineTo(px - 70, py + 40); g.lineTo(px - 46, py + 40); g.lineTo(px + 20, py + 8); g.fill();
+    g.fillStyle = '#3F7BD8'; g.fillRect(px - 130, py - 2, 270, 4); g.fillStyle = '#E95A6A'; g.beginPath(); g.moveTo(px - 146, py - 58); g.lineTo(px - 128, py - 58); g.lineTo(px - 118, py - 40); g.lineTo(px - 136, py - 40); g.fill();
+    g.fillStyle = '#5A6680'; for (let i = 0; i < 14; i++) g.fillRect(px - 90 + i * 14, py - 8, 5, 4);
+    g.fillStyle = th.mid; g.fillRect(px + 120, py - 14, 240, 22); g.fillRect(px + 300, py + 8, 10, h - py);   // jet bridge
+    g.fillStyle = 'rgba(255,230,180,.6)'; for (let i = 0; i < 8; i++) g.fillRect(px + 132 + i * 28, py - 9, 14, 8);
+    return;
+  }
+  if (Z === 'checkin') {
+    // airy white roof with skylights
+    roof('#FFFFFF', 10); g.globalAlpha = 0.5; for (let x = 30; x < w; x += 110) { g.fillStyle = '#FFFFFF'; g.fillRect(x, h * 0.06, 60, 10); } g.globalAlpha = 1;
+    g.strokeStyle = 'rgba(94,124,154,.55)'; g.lineWidth = 3; for (let x = 20; x < w; x += 110) { g.beginPath(); g.moveTo(x, h * 0.09); g.lineTo(x, h * 0.62); g.stroke(); }
+    // check-in counters with blue signs A-F, then a security arch
+    const letters = 'ABCDEF'; let x = 10, k = 0;
+    while (x < w - 40) {
+      if (k % 3 === 2) {   // security: two arches and a tray belt
+        for (const ax of [x + 14, x + 70]) { g.fillStyle = '#E8EEF4'; g.fillRect(ax, h * 0.6, 8, h * 0.4); g.fillRect(ax + 36, h * 0.6, 8, h * 0.4); g.fillRect(ax, h * 0.6, 44, 10); g.fillStyle = '#4FD69A'; g.fillRect(ax + 18, h * 0.615, 8, 4); }
+        g.fillStyle = th.mid; g.fillRect(x + 4, h - 34, 120, 10); g.fillStyle = '#9FB4CA'; for (let i = 0; i < 5; i++) g.fillRect(x + 8 + i * 24, h - 44, 18, 10);
+        g.save(); g.fillStyle = '#2F5E9E'; g.fillRect(x + 4, h * 0.5, 120, 20); g.fillStyle = '#FFFFFF'; g.font = '800 11px ' + FB; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SECURITY', x + 64, h * 0.5 + 10.5); g.restore();
+        x += 150;
+      } else {
+        const bw = 150; g.fillStyle = '#2F6AB0'; g.fillRect(x + 20, h * 0.48, 60, 26);
+        g.save(); g.fillStyle = '#FFFFFF'; g.font = '800 18px ' + FB; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(letters[k % 6], x + 50, h * 0.48 + 14); g.restore();
+        g.fillStyle = th.mid; g.fillRect(x + 48, h * 0.48 + 26, 4, h * 0.12);
+        g.fillStyle = '#F4F7FA'; g.fillRect(x, h - 58, bw - 10, 58); g.fillStyle = '#C9D4E0'; g.fillRect(x, h - 58, bw - 10, 8);
+        for (let i = 0; i < 3; i++) { g.fillStyle = '#5E7C9A'; g.fillRect(x + 16 + i * 44, h - 76, 18, 18); }   // little screens
+        c.wins.push({ x: x + 16, y: h - 76, w: 18, h: 18 });
+        x += bw;
+      }
+      k++;
+    }
+    // departures board
+    const bx = w * 0.38; g.fillStyle = '#1B1A2E'; g.fillRect(bx, h * 0.24, 230, 64); g.fillStyle = th.mid; g.fillRect(bx + 50, h * 0.14, 3, h * 0.1); g.fillRect(bx + 180, h * 0.14, 3, h * 0.1);
+    g.fillStyle = '#FFD84A'; g.font = '700 9px ' + FB; g.textAlign = 'left'; g.textBaseline = 'top';
+    ['DEPARTURES', 'NASHVILLE  1004  BOARDING', 'DUBLIN     1040  BOARDING', 'TOKYO      0919  ON TIME'].forEach((r, i) => g.fillText(r, bx + 10, h * 0.24 + 6 + i * 14));
+    return;
+  }
+  if (Z === 'garden') {
+    // dark glass wall
+    roof(th.mid, 8); g.strokeStyle = 'rgba(120,140,200,.35)'; g.lineWidth = 3; for (let x = 20; x < w; x += 96) { g.beginPath(); g.moveTo(x, h * 0.08); g.lineTo(x, h); g.stroke(); }
+    // the garden: hanok pavilions with curved tile roofs, red pillars, pines, paper lanterns on a string
+    let x = 0, k = 0;
+    while (x < w) {
+      const bw = 170 + R() * 40;
+      if (k % 2 === 0) {
+        const top = h * 0.56, cx2 = x + bw / 2;
+        g.fillStyle = '#1C2240'; g.fillRect(x + 20, top + 30, bw - 40, h - top - 30);
+        g.fillStyle = '#B8343A'; for (const px of [x + 26, x + bw - 36]) g.fillRect(px, top + 30, 10, h - top - 30);
+        g.fillStyle = '#2E8A6A'; g.fillRect(x + 20, top + 30, bw - 40, 6);
+        g.fillStyle = '#2A3352'; g.beginPath(); g.moveTo(x - 6, top + 14); g.quadraticCurveTo(x + 20, top + 30, cx2, top + 22); g.quadraticCurveTo(x + bw - 20, top + 30, x + bw + 6, top + 14);
+        g.lineTo(x + bw - 26, top - 8); g.quadraticCurveTo(cx2, top - 2, x + 26, top - 8); g.closePath(); g.fill();
+        g.strokeStyle = '#4A5680'; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 26, top - 8); g.quadraticCurveTo(cx2, top - 2, x + bw - 26, top - 8); g.stroke();
+        g.fillStyle = th.win; g.globalAlpha = 0.85; g.fillRect(x + 44, top + 44, bw - 88, h - top - 56); g.globalAlpha = 1;
+        g.strokeStyle = '#8A5A3A'; g.lineWidth = 2; for (let i = 1; i < 4; i++) { const lx = x + 44 + i * (bw - 88) / 4; g.beginPath(); g.moveTo(lx, top + 44); g.lineTo(lx, h - 12); g.stroke(); }
+        c.wins.push({ x: x + 44, y: top + 44, w: 12, h: 12 });
+        g.save(); g.fillStyle = '#FFD98A'; g.font = '800 10px ' + FB; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(['TEA HOUSE', 'K-CULTURE', 'HANBOK'][(k / 2) % 3], cx2, top + 39); g.restore();
+      } else {   // pine trees in planters
+        for (const tx of [x + bw * 0.3, x + bw * 0.7]) {
+          g.fillStyle = '#5A3A2A'; g.fillRect(tx - 4, h * 0.66, 8, h * 0.34); g.fillStyle = '#1E4A3E';
+          g.beginPath(); g.ellipse(tx, h * 0.64, 40, 18, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(tx + 10, h * 0.58, 30, 14, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(tx - 6, h * 0.53, 22, 10, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = '#2A3352'; g.fillRect(tx - 22, h - 22, 44, 22);
+        }
+      }
+      x += bw + 10; k++;
+    }
+    // lantern string across the top
+    g.strokeStyle = 'rgba(255,220,160,.5)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, h * 0.3);
+    for (let lx = 0; lx <= w; lx += 60) g.quadraticCurveTo(lx + 30, h * 0.36, lx + 60, h * 0.3); g.stroke();
+    for (let lx = 30; lx < w; lx += 60) { const col = ['#E8434F', '#3F6FD8', '#E8434F', '#2E9A6A'][(lx / 60 | 0) % 4]; g.fillStyle = col; g.fillRect(lx - 6, h * 0.33, 12, 16); g.fillStyle = 'rgba(255,220,140,.5)'; g.fillRect(lx - 3, h * 0.33 + 4, 6, 8); }
+    return;
+  }
+  // gate 1040: big rainy window, rows of seats, the gate sign
+  roof(th.mid, 8); g.strokeStyle = th.mid; g.lineWidth = 5; for (let x = 20; x < w; x += 120) { g.beginPath(); g.moveTo(x, h * 0.08); g.lineTo(x, h * 0.66); g.stroke(); }
+  g.lineWidth = 2; g.globalAlpha = 0.5; g.beginPath(); g.moveTo(0, h * 0.4); g.lineTo(w, h * 0.4); g.stroke(); g.globalAlpha = 1;
+  g.fillStyle = 'rgba(200,215,240,.35)'; for (let i = 0; i < 90; i++) { const rx = R() * w, ry = h * 0.1 + R() * h * 0.55; g.fillRect(rx, ry, 2, 6 + R() * 6); }   // drops on the glass
+  g.fillStyle = th.mid; g.fillRect(0, h * 0.66, w, 10);
+  for (let x = 10; x < w; x += 140) {   // rows of blue gate seats
+    for (let i = 0; i < 5; i++) { const sx = x + i * 22; g.fillStyle = '#2F5E9E'; g.fillRect(sx, h - 40, 18, 8); g.fillRect(sx, h - 56, 6, 18); g.fillStyle = th.mid; g.fillRect(sx + 6, h - 32, 3, 32); }
+  }
+  for (const gx of [w * 0.15, w * 0.62]) {
+    g.fillStyle = '#1B1A2E'; g.fillRect(gx, h * 0.46, 150, 46); g.fillStyle = th.mid; g.fillRect(gx + 30, h * 0.4, 3, h * 0.06); g.fillRect(gx + 117, h * 0.4, 3, h * 0.06);
+    g.save(); g.fillStyle = '#FFD84A'; g.font = '800 20px ' + FB; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(gx < w / 2 ? '1004' : '1040', gx + 12, h * 0.46 + 16);
+    g.font = '700 9px ' + FB; g.fillStyle = '#9FE0FF'; g.fillText(gx < w / 2 ? 'NASHVILLE · BOARDING' : 'DUBLIN · BOARDING', gx + 12, h * 0.46 + 35); g.restore();
+  }
 }
 // suitcase spring (bounces you, pops open a little)
 function drawSuitcaseSpring(x, y, k) {
@@ -5068,7 +5163,7 @@ function renderPlay(frozen) {
   for (const b of (L.belts || [])) if (vis(b.x0, b.x1 - b.x0)) drawBelt(b, g.t);
   for (const n of (L.npcs || [])) if (vis(n.x - 40, 80)) { if (n.k === 'cart') drawLittleCart(n, g.t, false); else if ((THEMES[L.theme] || {}).air) drawTraveler(n, g.t); else drawRoofCat(n, g.t, THEMES[L.theme] || {}); }
   for (const f of L.fans) if (vis(f.x)) { if (f.pool) drawPool(f, g.t); else if (f.down) drawWaterfall(f, g.t); else if (f.water) drawJet(f, g.t); else drawFan(f, g.t); }
-  for (const b of L.balloons) if (vis(b.x - 20, 40)) { const bt = THEMES[L.theme] || {}; if (bt.cm || bt.lights) drawLantern(b, g.t); else if (bt.pk || bt.port) drawFloat(b, g.t); else drawBalloon(b, g.t); }
+  for (const b of L.balloons) if (vis(b.x - 20, 40)) { const bt = THEMES[L.theme] || {}; if (bt.cm || bt.lights || bt.zone === 'garden') drawLantern(b, g.t); else if (bt.pk || bt.port) drawFloat(b, g.t); else drawBalloon(b, g.t); }
   if (g.boss) for (let i = 0; i < 2; i++) { const b = g.boss, bx = b.bins[i]; const open = i === b.cur && ['pop', 'throw', 'climb', 'dazed', 'hurt', 'dive'].includes(b.state); drawBossBehind(b, i, bx, open); }
   if (room.secret) drawPartyRoom(room, L, g.t);
   drawStaticChunks(L, th, room.secret ? 's' : 'm', x0, x1);
@@ -6315,7 +6410,7 @@ const WEATHER = {
   '2-1': { fx: 'mist' }, '2-2': { fx: 'spray' }, '2-3': { fx: 'rain', heavy: true }, '2-4': { fx: 'petals', cols: ['#FFFFFF', '#FFE0EA', '#FFD84A'] }, '2-5': { fx: 'fireflies' },
   '3-1': { fx: 'mist' }, '3-2': { fx: 'sunrays' }, '3-3': { fx: 'drizzle' }, '3-5': { fx: 'fireflies' },
   '4-1': { fx: 'sunrays' }, '4-2': { fx: 'clouds' }, '4-3': { fx: 'rain' }, '4-4': { fx: 'wind' }, '4-5': { fx: 'stars' },
-  '5-1': { fx: 'sunrays' }, '5-2': { fx: 'clouds' }, '5-3': { fx: 'rain' }, '5-4': { fx: 'sunrays' }, '5-5': { fx: 'snow' },
+  '5-1': { fx: 'sunrays' }, '5-3': { fx: 'stars' }, '5-5': { fx: 'rain' },
   '6-1': { fx: 'sunrays' }, '6-2': { fx: 'drizzle' }, '6-3': { fx: 'leaves', cols: ['#E9A23A', '#C8603A', '#B5402E', '#E8C24A'] }, '6-4': { fx: 'mist' }, '6-5': { fx: 'stars' },
   '7-1': { fx: 'petals', cols: ['#FFFFFF', '#FFD6E2', '#FFC0D0'] }, '7-3': { fx: 'petals', cols: ['#B79AE0', '#9A7AD0', '#D8C6F2'] }, '7-4': { fx: 'wind' }, '7-5': { fx: 'clouds' },
 };
