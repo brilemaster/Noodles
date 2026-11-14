@@ -44,7 +44,7 @@ canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 <script>
 'use strict';
 // ================= CORE: constants, physics, level data =================
-const VERSION = 52;
+const VERSION = 53;
 const T = 32;          // tile size in world units
 const LH = 16;         // level height in tiles
 const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -3987,13 +3987,13 @@ const SAVE_KEY = 'noodle-sunbeam-save';
 let SAVE = { profiles: [], cur: 0, sfx: true, music: true, haptics: true };
 function loadSave() {
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && Array.isArray(s.profiles)) SAVE = Object.assign(SAVE, s); } catch (e) { }
-  for (const p of SAVE.profiles) { p.pouch = (p.pouch || []).filter(t => PNAME[t]); p.levels = p.levels || {}; p.album = p.album || {}; p.seen = p.seen || {}; p.pouch = p.pouch || []; p.hints = p.hints || {}; p.diff = p.diff || 'normal'; }
+  for (const p of SAVE.profiles) { p.pouch = (p.pouch || []).filter(t => PNAME[t]); p.levels = p.levels || {}; p.album = p.album || {}; p.seen = p.seen || {}; p.pouch = p.pouch || []; p.hints = p.hints || {}; p.diff = p.diff || 'normal'; ensureIds(p); }
   if (SAVE.cur >= SAVE.profiles.length) SAVE.cur = 0;
   if (SAVE.haptics === undefined) SAVE.haptics = true;
 }
-function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); } catch (e) { } }
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); } catch (e) { } onlineQueue(); }
 function prof() { return SAVE.profiles[SAVE.cur] || null; }
-function addProfile(name) { SAVE.profiles.push({ name, diff: 'normal', levels: {}, album: {}, seen: {}, pouch: [], hints: {} }); SAVE.cur = SAVE.profiles.length - 1; persist(); }
+function addProfile(name) { const p = { name, diff: 'normal', levels: {}, album: {}, seen: {}, pouch: [], hints: {} }; ensureIds(p); SAVE.profiles.push(p); SAVE.cur = SAVE.profiles.length - 1; persist(); }
 function levelRec(id) { const p = prof(); return p ? p.levels[id] : null; }
 function starsFor(rec) { if (!rec || !rec.cleared) return 0; return 1 + (rec.tokens.every(Boolean) ? 1 : 0) + (rec.timeStar ? 1 : 0); }
 function totalStars(p) { let n = 0; for (const k in p.levels) n += starsFor(p.levels[k]); return n; }
@@ -5162,6 +5162,7 @@ function renderPlay(frozen) {
   const vw = VW / SCALE, vh = VH / SCALE;
   const x0 = Math.floor(g.cam.x / T) - 1, x1 = Math.ceil((g.cam.x + vw) / T) + 1, y0 = Math.floor(g.cam.y / T) - 1, y1 = Math.ceil((g.cam.y + vh) / T) + 1;
   const vis = (x, w) => x + (w || 64) > g.cam.x - 64 && x < g.cam.x + vw + 64;
+  if (room.secret) drawPartyRoom(room, L, g.t);   // the room's back wall goes first, so ropes, fans, balloons and doors sit on top of it
   // deco behind
   for (const d of L.deco) if (vis(d.x, d.w)) drawDeco(d, g.t);
   for (const v of L.vines) if (vis(v.ax - v.len, v.len * 2)) drawVine(v, g);
@@ -5171,7 +5172,6 @@ function renderPlay(frozen) {
   for (const f of L.fans) if (vis(f.x)) { if (f.pool) drawPool(f, g.t); else if (f.down) drawWaterfall(f, g.t); else if (f.water) drawJet(f, g.t); else drawFan(f, g.t); }
   for (const b of L.balloons) if (vis(b.x - 20, 40)) { const bt = THEMES[L.theme] || {}; if (bt.cm || bt.lights || bt.zone === 'garden') drawLantern(b, g.t); else if (bt.pk || bt.port) drawFloat(b, g.t); else drawBalloon(b, g.t); }
   if (g.boss) for (let i = 0; i < 2; i++) { const b = g.boss, bx = b.bins[i]; const open = i === b.cur && ['pop', 'throw', 'climb', 'dazed', 'hurt', 'dive'].includes(b.state); drawBossBehind(b, i, bx, open); }
-  if (room.secret) drawPartyRoom(room, L, g.t);
   drawStaticChunks(L, th, room.secret ? 's' : 'm', x0, x1);
   drawTiles(L, th, x0, x1, y0, y1, g.t, g.bumps, 'dyn');
   for (const f of L.flags) if (vis(f.x)) drawFlag(f, g.t);
@@ -5651,9 +5651,61 @@ function renderTitle() {
     flatText(tip, VW / 2, VH - SAFE.b - 26 * U, Math.round(12 * U), '#FFF3E0', 'center', '700 ' + FB);
   }
 }
+// ---------- online scoreboard (Supabase) ----------
+// Paste the project's URL and its anon / publishable key here. Both are meant to be public;
+// the database only lets a player change their own row (each player has a private secret on their device).
+const SUPA_URL = '';
+const SUPA_KEY = '';
+const ONLINE = !!(SUPA_URL && SUPA_KEY);
+let BOARD = null, boardAt = -1e9, boardBusy = false, syncT = null;
+const sent = {};
+function uuid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+}
+function ensureIds(p) { if (!p.uid) p.uid = uuid(); if (!p.secret) p.secret = uuid(); }
+function supa(path, opt) {
+  return fetch(SUPA_URL.replace(/\/$/, '') + '/rest/v1/' + path, Object.assign({ headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' } }, opt || {}));
+}
+function onlineRow(p) {
+  const st = playerStats(p), times = {};
+  for (const id in p.levels) { const r = p.levels[id]; if (r && r.cleared && r.best) times[id] = Math.round(r.best); }
+  return { p_id: p.uid, p_secret: p.secret, p_name: String(p.name || 'Player').slice(0, 24), p_stars: st.stars, p_finds: st.finds, p_far: st.far, p_times: times };
+}
+function onlineQueue() { if (!ONLINE) return; clearTimeout(syncT); syncT = setTimeout(onlineSync, 1500); }
+function onlineSync() {
+  if (!ONLINE) return;
+  let changed = false;
+  for (const p of SAVE.profiles) {
+    ensureIds(p); const row = onlineRow(p), key = JSON.stringify(row);
+    if (sent[p.uid] === key) continue;
+    sent[p.uid] = key; changed = true;
+    supa('rpc/noodle_save', { method: 'POST', body: key }).then(r => { if (!r.ok) delete sent[p.uid]; }).catch(() => { delete sent[p.uid]; });
+  }
+  if (changed) setTimeout(() => boardFetch(true), 1200);
+}
+function onlineRemove(p) {
+  if (!ONLINE || !p || !p.uid) return;
+  supa('rpc/noodle_remove', { method: 'POST', body: JSON.stringify({ p_id: p.uid, p_secret: p.secret }) }).catch(() => { });
+}
+function boardFetch(force) {
+  if (!ONLINE || boardBusy || (!force && performance.now() - boardAt < 30000)) return;
+  boardBusy = true; boardAt = performance.now();
+  supa('noodle_board?select=id,name,stars,finds,far,times&order=stars.desc,finds.desc&limit=100')
+    .then(r => r.ok ? r.json() : null).then(rows => { if (Array.isArray(rows)) BOARD = rows; })
+    .catch(() => { }).then(() => { boardBusy = false; });
+}
+// everyone to rank: this device's players (always fresh) plus everyone online, leader first
+function standings() {
+  const out = [], mine = {};
+  SAVE.profiles.forEach((p, i) => { ensureIds(p); const st = playerStats(p); mine[p.uid] = 1; out.push({ name: p.name, stars: st.stars, finds: st.finds, far: st.far, local: true, i }); });
+  if (BOARD) for (const r of BOARD) if (!mine[r.id]) out.push({ name: r.name, stars: r.stars | 0, finds: r.finds | 0, far: r.far == null ? -1 : r.far, local: false, i: 99 });
+  return out.sort((a, b) => b.stars - a.stars || b.finds - a.finds || a.i - b.i);
+}
 // the little standings card on the Home screen: everyone on this device, leader on top with a crown
 function titleStandings() {
-  const list = SAVE.profiles.map((p, i) => ({ p, i, st: playerStats(p) })).sort((a, b) => b.st.stars - a.st.stars || b.st.finds - a.st.finds || a.i - b.i);
+  boardFetch(false);
+  const list = standings().map(e => ({ p: { name: e.name }, i: e.local ? e.i : -1, local: e.local, st: e }));
   if (!list.length) return;
   const show = list.slice(0, 4), rh = Math.round(40 * U), hh = Math.round(30 * U), cw = Math.round(250 * U);
   const cx = VW - SAFE.r - 24 - cw, cy = SAFE.t + 18, ch = hh + show.length * rh + 10 * U + (list.length > 4 ? 18 * U : 0);
@@ -5665,7 +5717,7 @@ function titleStandings() {
   show.forEach((e, r) => {
     const y = cy + hh + r * rh + 4 * U, my = y + rh / 2, cur = e.i === SAVE.cur;
     if (cur) { rr(cx + 8 * U, y + 2, cw - 16 * U, rh - 4, (rh - 4) / 2); ctx.fillStyle = 'rgba(233,149,74,.28)'; ctx.fill(); }
-    const ax = cx + 30 * U; ci(ax, my, 14 * U); ctx.fillStyle = '#E9954A'; ctx.fill();
+    const ax = cx + 30 * U; ci(ax, my, 14 * U); ctx.fillStyle = e.local ? '#E9954A' : '#9FC7E8'; ctx.fill();
     flatText(e.p.name.charAt(0).toUpperCase(), ax, my + 1, Math.round(14 * U), '#2E2140', 'center', '800 ' + FB);
     if (r === 0 && lead > 0 && !tied) drawCrown(ax, my - 17 * U, 9 * U);
     let nm = e.p.name; const nsz = Math.round(16 * U); ctx.font = '800 ' + nsz + 'px ' + FB;
@@ -5673,7 +5725,8 @@ function titleStandings() {
     if (nm !== e.p.name) nm += '…';
     flatText(nm, cx + 52 * U, my + 1, nsz, '#2E2140', 'left', '800 ' + FB);
     flatText('★ ' + e.st.stars, cx + cw - 18 * U, my + 1, Math.round(16 * U), r === 0 && lead > 0 ? '#C98A10' : '#2E2140', 'right', '800 ' + FB);
-    BTN.push({ x: cx + 8 * U, y, w: cw - 16 * U, h: rh, fn: () => { SAVE.cur = e.i; persist(); } });   // tap a name to play as them
+    if (e.local) BTN.push({ x: cx + 8 * U, y, w: cw - 16 * U, h: rh, fn: () => { SAVE.cur = e.i; persist(); } });   // tap your own name to play as them
+    else { ci(ax + 10 * U, my + 10 * U, 4.5 * U); ctx.fillStyle = '#4FB07A'; ctx.fill(); }   // green dot = playing on another device
   });
   if (list.length > 4) flatText('+' + (list.length - 4) + ' more', cx + cw / 2, cy + ch - 14 * U, Math.round(11.5 * U), '#6B4560', 'center', '700 ' + FB);
 }
@@ -5726,7 +5779,7 @@ function renderProfiles() {
   // tabs: this device (now) and everyone (once the online leaderboard is connected)
   const tw = (compact ? 120 : 150) * U, th = (compact ? 30 : 34) * U;
   const tx0 = compact ? px + 40 * U + titleW : px + 24 * U, ty = compact ? py + 14 * U : py + 72 * U;
-  ['This device', 'Everyone'].forEach((lbl, i) => {
+  ['This device', 'Everyone'].forEach((lbl, i) => {   // Everyone = the online scoreboard
     const on = playersTab === i, tx = tx0 + i * (tw + 8 * U);
     rr(tx, ty, tw, th, th / 2); ctx.fillStyle = on ? '#2E2140' : 'rgba(46,33,64,.08)'; ctx.fill();
     flatText(lbl, tx + tw / 2, ty + th / 2, Math.round(13.5 * U), on ? '#FFF3E0' : '#6B4560', 'center', '700 ' + FB);
@@ -5734,8 +5787,25 @@ function renderProfiles() {
   });
   const top = compact ? py + 58 * U : ty + 50 * U, bottom = py + ph - (compact ? 10 * U : 76 * U);
   if (playersTab === 1) {
-    flatText('A worldwide leaderboard is coming soon.', VW / 2, (top + bottom) / 2 - 14 * U, Math.round(18 * U), '#2E2140', 'center', '700 ' + FB);
-    flatText('Once it’s connected, everyone’s stars will show up here.', VW / 2, (top + bottom) / 2 + 14 * U, Math.round(14 * U), '#6B4560', 'center', '600 ' + FB);
+    if (!ONLINE) {
+      flatText('The online scoreboard isn’t switched on yet.', VW / 2, (top + bottom) / 2 - 14 * U, Math.round(18 * U), '#2E2140', 'center', '700 ' + FB);
+      flatText('Once it is, everyone’s stars show up here.', VW / 2, (top + bottom) / 2 + 14 * U, Math.round(14 * U), '#6B4560', 'center', '600 ' + FB);
+      return;
+    }
+    boardFetch(false);
+    if (!BOARD) { flatText('Loading the scoreboard…', VW / 2, (top + bottom) / 2, Math.round(16 * U), '#6B4560', 'center', '700 ' + FB); return; }
+    const all = standings(), rh = Math.min((compact ? 36 : 46) * U, (bottom - top) / Math.max(1, Math.min(all.length, 12)));
+    const medal = ['#F2B530', '#B9C0CC', '#D08A55'];
+    all.slice(0, Math.floor((bottom - top) / rh)).forEach((e, r) => {
+      const y = top + r * rh, cy = y + rh / 2;
+      rr(px + 14 * U, y + 2, pw - 28 * U, rh - 4, Math.min(14 * U, rh / 2.2)); ctx.fillStyle = e.local ? 'rgba(233,149,74,.18)' : (r % 2 ? 'rgba(46,33,64,.035)' : 'rgba(46,33,64,.065)'); ctx.fill();
+      ci(px + 40 * U, cy, 12 * U); ctx.fillStyle = r < 3 && e.stars > 0 ? medal[r] : 'rgba(46,33,64,.12)'; ctx.fill();
+      flatText(String(r + 1), px + 40 * U, cy + 1, Math.round(12.5 * U), '#2E2140', 'center', '800 ' + FB);
+      if (r === 0 && e.stars > 0) drawCrown(px + 40 * U, cy - 15 * U, 7 * U);
+      flatText(e.name + (e.local ? '  (this device)' : ''), px + 64 * U, cy + 1, Math.round(15 * U), '#2E2140', 'left', '800 ' + FB);
+      const where = e.far >= 0 ? WORLDS[Math.min(e.far, WORLDS.length - 1)].name : '';
+      flatText('★ ' + e.stars + '   ' + e.finds + ' finds' + (where && !compact ? '   ' + where : ''), px + pw - 32 * U, cy + 1, Math.round(13 * U), '#6B4560', 'right', '700 ' + FB);
+    });
     return;
   }
   const list = SAVE.profiles.map((p, i) => ({ p, i, st: playerStats(p) })).sort((a, b) => b.st.stars - a.st.stars || b.st.finds - a.st.finds || a.i - b.i);
@@ -5768,7 +5838,7 @@ function renderProfiles() {
       flatPill(rx - bw2 * 2 - 8 * U, cy - bh2 / 2, bw2, bh2, 'Rename', () => { profMenu = -1; askName('profiles', 'profiles', e.i); }, { bg: 'rgba(46,33,64,.1)', fg: '#2E2140', size: Math.round(13.5 * U) });
       flatPill(rx - bw2, cy - bh2 / 2, bw2, bh2, profConfirm === e.i ? 'Sure?' : 'Remove', () => {
         if (profConfirm !== e.i) { profConfirm = e.i; return; }
-        SAVE.profiles.splice(e.i, 1); if (SAVE.cur >= SAVE.profiles.length) SAVE.cur = Math.max(0, SAVE.profiles.length - 1); profConfirm = -1; profMenu = -1; persist();
+        onlineRemove(SAVE.profiles[e.i]); SAVE.profiles.splice(e.i, 1); if (SAVE.cur >= SAVE.profiles.length) SAVE.cur = Math.max(0, SAVE.profiles.length - 1); profConfirm = -1; profMenu = -1; persist();
       }, { bg: profConfirm === e.i ? '#D9485F' : 'rgba(217,72,95,.12)', fg: profConfirm === e.i ? '#FFF3E0' : '#B23A4E', size: Math.round(13.5 * U) });
     } else {
       flatPill(rx - bh2, cy - bh2 / 2, bh2, bh2, '⋯', () => { profMenu = e.i; profConfirm = -1; }, { bg: 'rgba(46,33,64,.08)', fg: '#2E2140', size: Math.round(15 * U) });
@@ -6030,7 +6100,7 @@ function frame(now) {
   try { render(); } catch (e) { console.error(e); }
 }
 function boot() {
-  loadSave(); resize();
+  loadSave(); persist(); resize();
   document.getElementById('nameok').addEventListener('click', nameSubmit);
   document.getElementById('namecancel').addEventListener('click', () => closeName(nameCancelTo || 'title'));
   document.getElementById('nameinput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nameSubmit(); } });
